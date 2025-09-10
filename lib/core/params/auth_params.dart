@@ -27,3 +27,27 @@ class SignUpParams extends Equatable {
   @override
   List<Object> get props => [email, password, fullName];
 }
+
+class VerifyEmailParams extends Equatable {
+  final String email;
+  final String token;
+
+  const VerifyEmailParams({
+    required this.email,
+    required this.token,
+  });
+
+  @override
+  List<Object> get props => [email, token];
+}
+
+class ResendCodeParams extends Equatable {
+  final String email;
+
+  const ResendCodeParams({
+    required this.email,
+  });
+
+  @override
+  List<Object> get props => [email];
+}

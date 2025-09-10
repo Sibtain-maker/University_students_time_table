@@ -4,7 +4,9 @@ import '../../../../core/params/auth_params.dart';
 import '../models/user_model.dart';
 
 abstract class AuthRemoteDataSource {
-  Future<UserModel> signUp(SignUpParams params);
+  Future<void> signUp(SignUpParams params);
+  Future<UserModel> verifyEmail(String email, String token);
+  Future<void> resendVerificationCode(String email);
   Future<UserModel> signIn(LoginParams params);
   Future<void> signOut();
   Future<UserModel?> getCurrentUser();
@@ -17,16 +19,38 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   AuthRemoteDataSourceImpl({required this.supabaseClient});
 
   @override
-  Future<UserModel> signUp(SignUpParams params) async {
+  Future<void> signUp(SignUpParams params) async {
     try {
       final response = await supabaseClient.auth.signUp(
         email: params.email,
         password: params.password,
         data: {'full_name': params.fullName},
+        emailRedirectTo: null, // This ensures email verification is required
       );
 
       if (response.user == null) {
         throw const AuthFailure('Failed to create user');
+      }
+
+      // User created but needs email verification
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message);
+    } catch (e) {
+      throw AuthFailure(e.toString());
+    }
+  }
+
+  @override
+  Future<UserModel> verifyEmail(String email, String token) async {
+    try {
+      final response = await supabaseClient.auth.verifyOTP(
+        email: email,
+        token: token,
+        type: OtpType.signup,
+      );
+
+      if (response.user == null) {
+        throw const AuthFailure('Failed to verify email');
       }
 
       return UserModel(
@@ -34,6 +58,20 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         email: response.user!.email!,
         fullName: response.user!.userMetadata?['full_name'] as String?,
         createdAt: DateTime.parse(response.user!.createdAt),
+      );
+    } on AuthException catch (e) {
+      throw AuthFailure(e.message);
+    } catch (e) {
+      throw AuthFailure(e.toString());
+    }
+  }
+
+  @override
+  Future<void> resendVerificationCode(String email) async {
+    try {
+      await supabaseClient.auth.resend(
+        type: OtpType.signup,
+        email: email,
       );
     } on AuthException catch (e) {
       throw AuthFailure(e.message);

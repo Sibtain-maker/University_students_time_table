@@ -4,13 +4,13 @@ import '../../../../core/params/auth_params.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../repositories/auth_repository.dart';
 
-class SignUp implements UseCase<void, SignUpParams> {
+class ResendVerificationCode implements UseCase<void, ResendCodeParams> {
   final AuthRepository repository;
 
-  SignUp(this.repository);
+  ResendVerificationCode(this.repository);
 
   @override
-  Future<Either<Failure, void>> call(SignUpParams params) async {
-    return await repository.signUp(params);
+  Future<Either<Failure, void>> call(ResendCodeParams params) async {
+    return await repository.resendVerificationCode(params.email);
   }
 }

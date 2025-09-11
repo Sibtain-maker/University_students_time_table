@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/params/auth_params.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -60,32 +59,99 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  void _showAnimatedDialog({
+    required BuildContext context,
+    required String title,
+    required String message,
+    required bool isError,
+    VoidCallback? onClose,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return FadeInUp(
+          duration: const Duration(milliseconds: 300),
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  isError ? Icons.error_outline : Icons.check_circle_outline,
+                  color: isError ? Colors.red : Colors.green,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isError ? Colors.red : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (onClose != null) {
+                    onClose();
+                  }
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: isError ? Colors.red : Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocProvider(
-        create: (context) => getIt<AuthBloc>(),
-        child: BlocListener<AuthBloc, AuthState>(
+      body: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
+              _showAnimatedDialog(
+                context: context,
+                title: 'Login Failed',
+                message: state.message,
+                isError: true,
               );
             } else if (state is AuthAuthenticated) {
-              // Navigate to main app
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Welcome back!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              // Don't show dialog - let AuthWrapper handle navigation
+              print('🔐 DEBUG: Login successful - AuthWrapper will handle navigation');
             }
           },
-          child: SafeArea(
+        child: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Form(
@@ -235,7 +301,10 @@ class _LoginPageState extends State<LoginPage> {
                               onTap: () {
                                 Navigator.of(context).push(
                                   MaterialPageRoute(
-                                    builder: (context) => const SignUpPage(),
+                                    builder: (context) => BlocProvider.value(
+                                      value: context.read<AuthBloc>(),
+                                      child: const SignUpPage(),
+                                    ),
                                   ),
                                 );
                               },
@@ -259,7 +328,6 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
           ),
-        ),
       ),
     );
   }

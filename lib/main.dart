@@ -28,18 +28,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'University Timetable',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        fontFamily: 'SF Pro Display',
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return BlocProvider(
+      create: (context) => getIt<AuthBloc>(),
+      child: MaterialApp(
+        title: 'University Timetable',
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          fontFamily: 'SF Pro Display',
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+        ),
+        home: const AuthWrapper(),
+        debugShowCheckedModeBanner: false,
       ),
-      home: BlocProvider(
-        create: (context) => getIt<AuthBloc>(),
-        child: const AuthWrapper(),
-      ),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
@@ -49,24 +49,41 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthBloc, auth_states.AuthState>(
+    return BlocConsumer<AuthBloc, auth_states.AuthState>(
+      listener: (context, state) {
+        print('🏠 DEBUG: AuthWrapper listener - state: ${state.runtimeType}');
+      },
       builder: (context, state) {
+        print('🏠 DEBUG: AuthWrapper builder - state: ${state.runtimeType}');
         if (state is auth_states.AuthAuthenticated) {
+          print('🏠 DEBUG: User authenticated, showing HomePage');
           return const HomePage();
         } else if (state is auth_states.AuthUnauthenticated) {
+          print('🏠 DEBUG: User not authenticated, showing LoginPage');
+          return const LoginPage();
+        } else if (state is auth_states.AuthEmailVerificationRequired) {
+          print('🏠 DEBUG: Email verification required, showing LoginPage');
           return const LoginPage();
         } else if (state is auth_states.AuthLoading) {
+          print('🏠 DEBUG: Auth loading, showing spinner');
           return const Scaffold(
             body: Center(
               child: CircularProgressIndicator(),
             ),
           );
+        } else if (state is auth_states.AuthInitial) {
+          print('🏠 DEBUG: Auth initial state, showing spinner');
+          return const Scaffold(
+            body: Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (state is auth_states.AuthError) {
+          print('🏠 DEBUG: Auth error state, showing LoginPage');
+          return const LoginPage();
         } else {
-          return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          print('🏠 DEBUG: Unknown state: ${state.runtimeType}, showing LoginPage');
+          return const LoginPage();
         }
       },
     );

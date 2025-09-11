@@ -17,23 +17,6 @@ class AuthSignUpRequested extends AuthEvent {
   List<Object> get props => [params];
 }
 
-class AuthVerifyEmailRequested extends AuthEvent {
-  final VerifyEmailParams params;
-
-  const AuthVerifyEmailRequested(this.params);
-
-  @override
-  List<Object> get props => [params];
-}
-
-class AuthResendCodeRequested extends AuthEvent {
-  final ResendCodeParams params;
-
-  const AuthResendCodeRequested(this.params);
-
-  @override
-  List<Object> get props => [params];
-}
 
 class AuthSignInRequested extends AuthEvent {
   final LoginParams params;

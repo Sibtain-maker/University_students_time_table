@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../core/params/auth_params.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -75,42 +74,129 @@ class _SignUpPageState extends State<SignUpPage> {
   }
 
   void _handleSignUp() {
+    print('🎯 DEBUG: Signup button pressed');
     if (_formKey.currentState!.validate()) {
+      print('🎯 DEBUG: Form validation passed');
       final params = SignUpParams(
         email: _emailController.text.trim(),
         password: _passwordController.text,
         fullName: _nameController.text.trim(),
       );
+      print('🎯 DEBUG: Signup params created - Email: ${params.email}, Name: ${params.fullName}');
+      print('🎯 DEBUG: About to dispatch AuthSignUpRequested event');
       context.read<AuthBloc>().add(AuthSignUpRequested(params));
+      print('🎯 DEBUG: AuthSignUpRequested event dispatched');
+    } else {
+      print('🎯 DEBUG: Form validation failed');
     }
+  }
+
+  void _showAnimatedDialog({
+    required BuildContext context,
+    required String title,
+    required String message,
+    required bool isError,
+    VoidCallback? onClose,
+  }) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return FadeInUp(
+          duration: const Duration(milliseconds: 300),
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            title: Row(
+              children: [
+                Icon(
+                  isError ? Icons.error_outline : Icons.check_circle_outline,
+                  color: isError ? Colors.red : Colors.green,
+                  size: 28,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isError ? Colors.red : Colors.green,
+                  ),
+                ),
+              ],
+            ),
+            content: Text(
+              message,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                height: 1.4,
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  if (onClose != null) {
+                    onClose();
+                  }
+                },
+                style: TextButton.styleFrom(
+                  backgroundColor: isError ? Colors.red : Colors.green,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocProvider(
-        create: (context) => getIt<AuthBloc>(),
-        child: BlocListener<AuthBloc, AuthState>(
+      body: BlocListener<AuthBloc, AuthState>(
           listener: (context, state) {
             if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red,
-                ),
+              _showAnimatedDialog(
+                context: context,
+                title: 'Error',
+                message: state.message,
+                isError: true,
               );
             } else if (state is AuthAuthenticated) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Account created successfully!'),
-                  backgroundColor: Colors.green,
-                ),
+              _showAnimatedDialog(
+                context: context,
+                title: 'Success',
+                message: 'Account created successfully!',
+                isError: false,
+                onClose: () => Navigator.of(context).pop(),
               );
-              Navigator.of(context).pop();
+            } else if (state is AuthEmailVerificationRequired) {
+              _showAnimatedDialog(
+                context: context,
+                title: 'Verification Required',
+                message: 'Please check your email for a verification link',
+                isError: false,
+                onClose: () => Navigator.of(context).pop(),
+              );
             }
           },
-          child: SafeArea(
+        child: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(24.0),
               child: Form(
@@ -322,7 +408,6 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               ),
             ),
-          ),
         ),
       ),
     );

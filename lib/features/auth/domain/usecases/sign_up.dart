@@ -11,6 +11,9 @@ class SignUp implements UseCase<void, SignUpParams> {
 
   @override
   Future<Either<Failure, void>> call(SignUpParams params) async {
-    return await repository.signUp(params);
+    print('🎯 DEBUG: SignUp usecase called with email: ${params.email}');
+    final result = await repository.signUp(params);
+    print('🎯 DEBUG: SignUp usecase completed, returning result');
+    return result;
   }
 }

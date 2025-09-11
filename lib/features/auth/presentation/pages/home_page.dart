@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:animate_do/animate_do.dart';
-import '../../../../core/di/injection_container.dart';
 import '../../../../shared/widgets/custom_button.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
@@ -13,9 +12,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocProvider(
-        create: (context) => getIt<AuthBloc>(),
-        child: BlocBuilder<AuthBloc, AuthState>(
+      body: BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {
             if (state is AuthAuthenticated) {
               return SafeArea(
@@ -131,7 +128,6 @@ class HomePage extends StatelessWidget {
               ),
             );
           },
-        ),
       ),
     );
   }

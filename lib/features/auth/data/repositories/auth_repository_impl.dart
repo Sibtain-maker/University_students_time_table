@@ -13,38 +13,19 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, void>> signUp(SignUpParams params) async {
     try {
+      print('🎯 DEBUG: AuthRepository signUp called, calling remoteDataSource');
       await remoteDataSource.signUp(params);
+      print('🎯 DEBUG: AuthRepository signUp completed successfully');
       return const Right(null);
     } on Failure catch (failure) {
+      print('🎯 DEBUG: AuthRepository caught Failure: ${failure.message}');
       return Left(failure);
     } catch (e) {
+      print('🎯 DEBUG: AuthRepository caught generic exception: $e');
       return Left(AuthFailure(e.toString()));
     }
   }
 
-  @override
-  Future<Either<Failure, UserEntity>> verifyEmail(String email, String token) async {
-    try {
-      final user = await remoteDataSource.verifyEmail(email, token);
-      return Right(user);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(AuthFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> resendVerificationCode(String email) async {
-    try {
-      await remoteDataSource.resendVerificationCode(email);
-      return const Right(null);
-    } on Failure catch (failure) {
-      return Left(failure);
-    } catch (e) {
-      return Left(AuthFailure(e.toString()));
-    }
-  }
 
   @override
   Future<Either<Failure, UserEntity>> signIn(LoginParams params) async {
